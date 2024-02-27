@@ -7,7 +7,7 @@ h1 {
 }
 #canvas {
     width: 800px;
-    height: 600px;
+    height: 800px;
     background: #FFFFFF;
     image-rendering: pixelated;
 }

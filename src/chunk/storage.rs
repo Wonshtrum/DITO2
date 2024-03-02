@@ -1,7 +1,7 @@
 use core::{fmt, mem::size_of};
 
 use crate::{
-    chunk::{block::Block, CHUNK_AREA, CHUNK_HALF_SIZE, CHUNK_SIZE, LOW_NIBBLE, PALETTE_SIZE},
+    chunk::{blocks::Block, CHUNK_AREA, CHUNK_HALF_SIZE, CHUNK_SIZE, LOW_NIBBLE, PALETTE_SIZE},
     log, DebugInline,
 };
 
@@ -86,6 +86,10 @@ impl ChunkStorage {
                     let id = match id {
                         Some(id) => {
                             palette[id].1 += 1;
+                            if palette[id].1 == CHUNK_AREA as u16 {
+                                *self = ChunkStorage::Uniform(block);
+                                return;
+                            }
                             id as u8
                         }
                         None => todo!("PALETTE FULL"),

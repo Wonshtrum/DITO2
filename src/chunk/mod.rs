@@ -5,13 +5,10 @@ use core::{
 
 use crate::{
     chunk::storage::{ChunkStorage, Palette},
-    wasm::{
-        self,
-        draw::{BoundingBox, Rectangle, RGB},
-    },
+    wasm::draw::{fill_rect, Rectangle, RGB},
 };
 
-pub mod block;
+pub mod blocks;
 pub mod layer;
 pub mod storage;
 
@@ -38,10 +35,12 @@ impl Chunk {
         let ox = self.x * (CHUNK_SIZE as isize);
         let oy = self.y * (CHUNK_SIZE as isize);
         match &self.storage {
-            ChunkStorage::Uniform(blocks) => wasm::fill_rect(Rectangle {
-                bbox: BoundingBox::square(ox, oy, CHUNK_SIZE),
-                fill: COLORS[blocks.id as usize],
-            }),
+            ChunkStorage::Uniform(blocks) => fill_rect(Rectangle::square(
+                ox,
+                oy,
+                CHUNK_SIZE,
+                COLORS[blocks.id as usize],
+            )),
             ChunkStorage::Palette(blocks) => {
                 let Palette { palette, data, .. } = &**blocks;
                 for y in 0..CHUNK_SIZE {
@@ -50,14 +49,18 @@ impl Chunk {
                         let block1 = palette[(byte & 0x0F) as usize].0;
                         let block2 = palette[((byte >> 4) & 0x0F) as usize].0;
                         let ox = ox + (x * 2) as isize;
-                        wasm::fill_rect(Rectangle {
-                            bbox: BoundingBox::square(ox + 1, oy + y as isize, 1),
-                            fill: COLORS[block1.id as usize],
-                        });
-                        wasm::fill_rect(Rectangle {
-                            bbox: BoundingBox::square(ox, oy + y as isize, 1),
-                            fill: COLORS[block2.id as usize],
-                        });
+                        fill_rect(Rectangle::square(
+                            ox + 1,
+                            oy + y as isize,
+                            1,
+                            COLORS[block1.id as usize],
+                        ));
+                        fill_rect(Rectangle::square(
+                            ox,
+                            oy + y as isize,
+                            1,
+                            COLORS[block2.id as usize],
+                        ));
                     }
                 }
             }
@@ -65,10 +68,12 @@ impl Chunk {
                 for y in 0..CHUNK_SIZE {
                     for x in 0..CHUNK_SIZE {
                         let block = blocks[y * CHUNK_SIZE + x];
-                        wasm::fill_rect(Rectangle {
-                            bbox: BoundingBox::square(ox + x as isize, oy + y as isize, 1),
-                            fill: COLORS[block.id as usize],
-                        })
+                        fill_rect(Rectangle::square(
+                            ox + x as isize,
+                            oy + y as isize,
+                            1,
+                            COLORS[block.id as usize],
+                        ))
                     }
                 }
             }

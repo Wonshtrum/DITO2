@@ -1,5 +1,3 @@
-use crate::wasm::draw::Rectangle;
-
 pub mod draw;
 
 mod sys {
@@ -17,20 +15,6 @@ pub fn log(msg: &str) {
 
 pub fn error(msg: &str) {
     unsafe { sys::error(msg.as_ptr(), msg.len()) }
-}
-
-pub fn fill_rect(rect: Rectangle) {
-    unsafe {
-        sys::fill_rect(
-            rect.bbox.x,
-            rect.bbox.y,
-            rect.bbox.w,
-            rect.bbox.h,
-            rect.fill.r,
-            rect.fill.g,
-            rect.fill.b,
-        )
-    }
 }
 
 #[macro_export]

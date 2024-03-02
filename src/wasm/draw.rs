@@ -1,3 +1,5 @@
+use crate::wasm::sys;
+
 #[derive(Debug, Clone, Copy)]
 pub struct RGB {
     pub r: u8,
@@ -29,24 +31,39 @@ impl RGB {
 }
 
 #[derive(Debug, Clone)]
-pub struct BoundingBox {
+pub struct Rectangle {
     pub x: isize,
     pub y: isize,
     pub w: usize,
     pub h: usize,
-}
-
-impl BoundingBox {
-    pub fn new(x: isize, y: isize, w: usize, h: usize) -> Self {
-        Self { x, y, w, h }
-    }
-    pub fn square(x: isize, y: isize, s: usize) -> Self {
-        Self { x, y, w: s, h: s }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Rectangle {
-    pub bbox: BoundingBox,
     pub fill: RGB,
+}
+
+impl Rectangle {
+    pub fn new(x: isize, y: isize, w: usize, h: usize, fill: RGB) -> Self {
+        Self { x, y, w, h, fill }
+    }
+    pub fn square(x: isize, y: isize, s: usize, fill: RGB) -> Self {
+        Self {
+            x,
+            y,
+            w: s,
+            h: s,
+            fill,
+        }
+    }
+}
+
+pub fn fill_rect(rect: Rectangle) {
+    unsafe {
+        sys::fill_rect(
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
+            rect.fill.r,
+            rect.fill.g,
+            rect.fill.b,
+        )
+    }
 }

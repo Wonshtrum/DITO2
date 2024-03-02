@@ -38,7 +38,6 @@ class Batch {
     }
 
     flush(reset = true) {
-        console.trace("BATCH.flush");
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.vertexBuffer.subarray(0, this.index));
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 6 * this.quadCount);

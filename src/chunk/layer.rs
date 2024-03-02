@@ -1,7 +1,7 @@
 use core::mem::size_of;
 use std::collections::HashMap;
 
-use crate::chunk::{block::Block, storage::ChunkStorage, Chunk, CHUNK_SIZE};
+use crate::chunk::{blocks::Block, storage::ChunkStorage, Chunk, CHUNK_SIZE};
 
 type ChunkKey = (isize, isize);
 #[derive(Debug)]
@@ -30,9 +30,12 @@ impl Layer {
 
     pub fn get_key(x: isize, y: isize) -> (ChunkKey, usize, usize) {
         (
-            (x / CHUNK_SIZE as isize, y / CHUNK_SIZE as isize),
-            (x % CHUNK_SIZE as isize) as usize,
-            (y % CHUNK_SIZE as isize) as usize,
+            (
+                x.div_euclid(CHUNK_SIZE as isize),
+                y.div_euclid(CHUNK_SIZE as isize),
+            ),
+            x.rem_euclid(CHUNK_SIZE as isize) as usize,
+            y.rem_euclid(CHUNK_SIZE as isize) as usize,
         )
     }
 

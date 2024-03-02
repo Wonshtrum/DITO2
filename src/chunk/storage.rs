@@ -2,7 +2,7 @@ use core::{fmt, mem::size_of};
 
 use crate::{
     chunk::{blocks::Block, CHUNK_AREA, CHUNK_HALF_SIZE, CHUNK_SIZE, LOW_NIBBLE, PALETTE_SIZE},
-    log, DebugInline,
+    DebugInline,
 };
 
 pub enum ChunkStorage {
@@ -132,7 +132,6 @@ pub struct Palette {
 
 impl fmt::Debug for Palette {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        log!("{:?}", f.align());
         if let Some(fmt::Alignment::Center) = f.align() {
             f.debug_struct("Palette")
                 .field(

@@ -40,7 +40,10 @@ class Batch {
     flush(reset = true) {
         this.bind();
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.vertexBuffer.subarray(0, this.index));
+        gl.uniform1i(SHADERS.batch.uniforms.u_debug, 0);
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 6 * this.quadCount);
+        // gl.uniform1i(SHADERS.batch.uniforms.u_debug, 1);
+        // gl.drawArraysInstanced(gl.LINES, 0, 6, 6 * this.quadCount);
         if (reset) {
             this.quadCount = 0;
             this.index = 0;
@@ -48,5 +51,5 @@ class Batch {
     }
 };
 
-// [(x, y), (w, h), (r, g, b, a)]
-const BATCH = new Batch([2, 2, 4]);
+// [(x, y), (w, h), (t), (r, g, b, a)]
+const BATCH = new Batch([2, 2, 1, 4]);

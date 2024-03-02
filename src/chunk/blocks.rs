@@ -9,8 +9,12 @@ pub struct Block {
 impl Block {
     pub const AIR: Block = Block { id: 0, flags: 0 };
     pub const STONE: Block = Block { id: 1, flags: 0 };
-    pub const DIRT: Block = Block { id: 2, flags: 0 };
-    pub const GRASS: Block = Block { id: 3, flags: 0 };
+    pub const GRASS: Block = Block { id: 2, flags: 0 };
+    pub const DIRT: Block = Block { id: 3, flags: 0 };
+
+    pub fn texture(&self) -> usize {
+        self.id as usize
+    }
 }
 
 impl fmt::Debug for Block {

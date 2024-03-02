@@ -1,9 +1,8 @@
 use core::mem::size_of;
 use std::collections::HashMap;
 
-use crate::chunk::{blocks::Block, storage::ChunkStorage, Chunk, CHUNK_SIZE};
+use crate::chunk::{blocks::Block, get_key, Chunk, ChunkGenerator, ChunkKey};
 
-type ChunkKey = (isize, isize);
 #[derive(Debug)]
 pub struct Layer {
     pub chunks: HashMap<ChunkKey, Chunk>,
@@ -20,43 +19,24 @@ impl Layer {
         self.chunks.insert((chunk.x, chunk.y), chunk);
     }
 
-    pub fn generate_chunk(key: ChunkKey) -> Chunk {
-        Chunk {
-            x: key.0,
-            y: key.1,
-            storage: ChunkStorage::Uniform(Block::AIR),
-        }
-    }
-
-    pub fn get_key(x: isize, y: isize) -> (ChunkKey, usize, usize) {
-        (
-            (
-                x.div_euclid(CHUNK_SIZE as isize),
-                y.div_euclid(CHUNK_SIZE as isize),
-            ),
-            x.rem_euclid(CHUNK_SIZE as isize) as usize,
-            y.rem_euclid(CHUNK_SIZE as isize) as usize,
-        )
-    }
-
     pub fn get_block_immut(&self, x: isize, y: isize) -> Option<Block> {
-        let (key, x, y) = Self::get_key(x, y);
+        let (key, x, y) = get_key(x, y);
         self.chunks.get(&key).map(|chunk| chunk.get_block(x, y))
     }
 
-    pub fn get_block(&mut self, x: isize, y: isize) -> Block {
-        let (key, x, y) = Self::get_key(x, y);
+    pub fn get_block<G: ChunkGenerator>(&mut self, x: isize, y: isize, g: &G) -> Block {
+        let (key, x, y) = get_key(x, y);
         self.chunks
             .entry(key)
-            .or_insert(Self::generate_chunk(key))
+            .or_insert(g.generate(key))
             .get_block(x, y)
     }
 
-    pub fn set_block(&mut self, x: isize, y: isize, block: Block) {
-        let (key, x, y) = Self::get_key(x, y);
+    pub fn set_block<G: ChunkGenerator>(&mut self, x: isize, y: isize, block: Block, g: &G) {
+        let (key, x, y) = get_key(x, y);
         self.chunks
             .entry(key)
-            .or_insert(Self::generate_chunk(key))
+            .or_insert(g.generate(key))
             .set_block(x, y, block);
     }
 

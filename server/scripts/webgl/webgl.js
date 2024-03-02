@@ -183,7 +183,7 @@ const transferTarget = (() => {
             v_position = a_offset;
             gl_Position = vec4(v_position*2.0-1.0, 0, 1);
         }
-    `, A_OFFSETS_STRIP);
+    `, I_OFFSETS_STRIP);
     const transferFragmentShader = compileShader(gl.FRAGMENT_SHADER, `
         layout(location = 0) out vec4 color;
         in vec2 v_position;

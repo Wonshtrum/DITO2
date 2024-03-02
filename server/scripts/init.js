@@ -3,6 +3,7 @@
 
 let DITO2;
 let WORLD;
+let ATLAS;
 
 // let mainFBO = new FBO(RESOLUTION, RESOLUTION, [AP("main")]);
 
@@ -15,6 +16,7 @@ function get_memory(ptr, len) {
 }
 
 async function init() {
+    ATLAS = loadTexture("atlas.png");
     let dito2_path = "../target/wasm32-unknown-unknown/release/dito2.wasm";
     let dito2 = await WebAssembly.instantiateStreaming(fetch(dito2_path), {
         "dito2": {
@@ -26,8 +28,8 @@ async function init() {
                 let msg = new TextDecoder().decode(get_memory(ptr, len));
                 console.error(msg);
             },
-            "fill_rect": (x, y, w, h, r, g, b) => {
-                BATCH.draw(x, y, w - 1 / 8, h - 1 / 8, r / 256, g / 256, b / 256, 1);
+            "draw_quad": (x, y, w, h, t, r, g, b, a) => {
+                BATCH.draw(x, y, w, h, t, r / 256, g / 256, b / 256, a / 256);
             }
         }
     });
@@ -40,8 +42,9 @@ async function init() {
 
 let x = 0;
 let y = 0;
+let ticks = 0;
 let SPEED = 2;
-let ZOOM = 8;
+let ZOOM = 32;
 
 let BLOCK_ID = 0;
 let BLOCK_FLAGS = 0;
@@ -50,9 +53,10 @@ function tick() {
     SHADERS.batch.bind();
     gl.uniform2f(SHADERS.batch.uniforms.u_screen, RESOLUTION, RESOLUTION);
     gl.uniform3f(SHADERS.batch.uniforms.u_camera, x, y, ZOOM);
+    gl.uniform1i(SHADERS.batch.uniforms.u_t, ticks);
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    DITO2.update(WORLD);
+    DITO2.draw(WORLD);
     BATCH.flush();
     // transferTarget(mainFBO.texture);
 
@@ -74,6 +78,8 @@ function tick() {
         let block_y = y - (CURSOR.y * 2 - 1) * RESOLUTION / ZOOM;
         DITO2.set_block(WORLD, block_x, block_y, BLOCK_ID, BLOCK_FLAGS)
     }
+
+    ticks += 1;
     requestAnimationFrame(tick);
 }
 

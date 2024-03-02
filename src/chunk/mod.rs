@@ -5,18 +5,34 @@ use core::{
 
 use crate::{
     chunk::storage::{ChunkStorage, Palette},
-    wasm::draw::{fill_rect, Rectangle, RGB},
+    wasm::draw::{draw_quad, Rectangle},
 };
 
 pub mod blocks;
 pub mod layer;
 pub mod storage;
 
+pub trait ChunkGenerator {
+    fn generate(&self, key: ChunkKey) -> Chunk;
+}
+
 const CHUNK_SIZE: usize = 16;
 const CHUNK_HALF_SIZE: usize = CHUNK_SIZE / 2;
 const CHUNK_AREA: usize = CHUNK_SIZE * CHUNK_SIZE;
 const PALETTE_SIZE: usize = CHUNK_SIZE * CHUNK_HALF_SIZE;
 const LOW_NIBBLE: usize = 1;
+
+pub type ChunkKey = (isize, isize);
+pub fn get_key(x: isize, y: isize) -> (ChunkKey, usize, usize) {
+    (
+        (
+            x.div_euclid(CHUNK_SIZE as isize),
+            y.div_euclid(CHUNK_SIZE as isize),
+        ),
+        x.rem_euclid(CHUNK_SIZE as isize) as usize,
+        y.rem_euclid(CHUNK_SIZE as isize) as usize,
+    )
+}
 
 #[derive(Debug)]
 pub struct Chunk {
@@ -25,7 +41,6 @@ pub struct Chunk {
     pub storage: ChunkStorage,
 }
 
-const COLORS: &[RGB] = &[RGB::BLACK, RGB::GREY, RGB::RED, RGB::GREEN];
 impl Chunk {
     pub fn size(&self) -> usize {
         size_of::<Self>() + self.storage.size()
@@ -35,12 +50,9 @@ impl Chunk {
         let ox = self.x * (CHUNK_SIZE as isize);
         let oy = self.y * (CHUNK_SIZE as isize);
         match &self.storage {
-            ChunkStorage::Uniform(blocks) => fill_rect(Rectangle::square(
-                ox,
-                oy,
-                CHUNK_SIZE,
-                COLORS[blocks.id as usize],
-            )),
+            ChunkStorage::Uniform(blocks) => {
+                draw_quad(Rectangle::square(ox, oy, CHUNK_SIZE, blocks.texture()))
+            }
             ChunkStorage::Palette(blocks) => {
                 let Palette { palette, data, .. } = &**blocks;
                 for y in 0..CHUNK_SIZE {
@@ -49,18 +61,13 @@ impl Chunk {
                         let block1 = palette[(byte & 0x0F) as usize].0;
                         let block2 = palette[((byte >> 4) & 0x0F) as usize].0;
                         let ox = ox + (x * 2) as isize;
-                        fill_rect(Rectangle::square(
+                        draw_quad(Rectangle::square(
                             ox + 1,
                             oy + y as isize,
                             1,
-                            COLORS[block1.id as usize],
+                            block1.texture(),
                         ));
-                        fill_rect(Rectangle::square(
-                            ox,
-                            oy + y as isize,
-                            1,
-                            COLORS[block2.id as usize],
-                        ));
+                        draw_quad(Rectangle::square(ox, oy + y as isize, 1, block2.texture()));
                     }
                 }
             }
@@ -68,11 +75,11 @@ impl Chunk {
                 for y in 0..CHUNK_SIZE {
                     for x in 0..CHUNK_SIZE {
                         let block = blocks[y * CHUNK_SIZE + x];
-                        fill_rect(Rectangle::square(
+                        draw_quad(Rectangle::square(
                             ox + x as isize,
                             oy + y as isize,
                             1,
-                            COLORS[block.id as usize],
+                            block.texture(),
                         ))
                     }
                 }

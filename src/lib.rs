@@ -60,8 +60,13 @@ pub extern "C" fn set_block(world: &mut World, x: f32, y: f32, id: u8, flags: u8
 }
 
 #[no_mangle]
-pub extern "C" fn update(world: &mut World) {
+pub extern "C" fn draw(world: &mut World) {
     world.draw();
+}
+
+#[no_mangle]
+pub extern "C" fn update(world: &mut World) {
+    world.update();
 }
 
 #[no_mangle]

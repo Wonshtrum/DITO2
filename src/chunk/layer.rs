@@ -28,7 +28,7 @@ impl Layer {
         let (key, x, y) = get_key(x, y);
         self.chunks
             .entry(key)
-            .or_insert(g.generate(key))
+            .or_insert_with(|| g.get_chunk(key))
             .get_block(x, y)
     }
 
@@ -36,7 +36,7 @@ impl Layer {
         let (key, x, y) = get_key(x, y);
         self.chunks
             .entry(key)
-            .or_insert(g.generate(key))
+            .or_insert_with(|| g.get_chunk(key))
             .set_block(x, y, block);
     }
 

@@ -1,21 +1,13 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::chunk::{
-    blocks::Block, layer::Layer, storage::ChunkStorage, Chunk, ChunkGenerator, ChunkKey,
+use crate::{
+    chunk::{blocks::Block, layer::Layer},
+    world::generator::WorldGenerator,
 };
 
-pub enum Entity {}
+pub mod generator;
 
-pub struct WorldGenerator {}
-impl ChunkGenerator for WorldGenerator {
-    fn generate(&self, key: ChunkKey) -> Chunk {
-        Chunk {
-            x: key.0,
-            y: key.1,
-            storage: ChunkStorage::Uniform(Block::AIR),
-        }
-    }
-}
+pub enum Entity {}
 
 pub struct World {
     pub generator: WorldGenerator,
@@ -24,9 +16,9 @@ pub struct World {
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(seed: usize) -> Self {
         Self {
-            generator: WorldGenerator {},
+            generator: WorldGenerator::new(seed),
             terrain: Layer::new(),
             entities: Vec::new(),
         }

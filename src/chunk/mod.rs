@@ -13,14 +13,14 @@ pub mod layer;
 pub mod storage;
 
 pub trait ChunkGenerator {
-    fn generate(&self, key: ChunkKey) -> Chunk;
+    fn get_chunk(&self, key: ChunkKey) -> Chunk;
 }
 
-const CHUNK_SIZE: usize = 16;
-const CHUNK_HALF_SIZE: usize = CHUNK_SIZE / 2;
-const CHUNK_AREA: usize = CHUNK_SIZE * CHUNK_SIZE;
-const PALETTE_SIZE: usize = CHUNK_SIZE * CHUNK_HALF_SIZE;
-const LOW_NIBBLE: usize = 1;
+pub const CHUNK_SIZE: usize = 16;
+pub const CHUNK_HALF_SIZE: usize = CHUNK_SIZE / 2;
+pub const CHUNK_AREA: usize = CHUNK_SIZE * CHUNK_SIZE;
+pub const PALETTE_SIZE: usize = CHUNK_SIZE * CHUNK_HALF_SIZE;
+pub const LOW_NIBBLE: usize = 1;
 
 pub type ChunkKey = (isize, isize);
 pub fn get_key(x: isize, y: isize) -> (ChunkKey, usize, usize) {

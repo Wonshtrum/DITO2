@@ -28,8 +28,8 @@ async function init() {
                 let msg = new TextDecoder().decode(get_memory(ptr, len));
                 console.error(msg);
             },
-            "draw_quad": (x, y, w, h, t, r, g, b, a) => {
-                BATCH.draw(x, y, w, h, t, r / 256, g / 256, b / 256, a / 256);
+            "draw_quad": (x, y, w, h, tex, r, g, b, a) => {
+                BATCH.draw(x, y, w, h, tex, r / 256, g / 256, b / 256, a / 256);
             }
         }
     });
@@ -44,7 +44,7 @@ let x = 0;
 let y = 0;
 let ticks = 0;
 let SPEED = 2;
-let ZOOM = 32;
+let ZOOM = 8;
 
 let BLOCK_ID = 0;
 let BLOCK_FLAGS = 0;

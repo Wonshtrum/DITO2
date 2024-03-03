@@ -5,7 +5,17 @@ mod sys {
     extern "C" {
         pub fn log(ptr: *const u8, len: usize);
         pub fn error(ptr: *const u8, len: usize);
-        pub fn draw_quad(x: isize, y: isize, w: usize, h: usize, tex: usize, r: u8, g: u8, b: u8, a: u8);
+        pub fn draw_quad(
+            x: isize,
+            y: isize,
+            w: usize,
+            h: usize,
+            tex: usize,
+            r: u8,
+            g: u8,
+            b: u8,
+            a: u8,
+        );
     }
 }
 

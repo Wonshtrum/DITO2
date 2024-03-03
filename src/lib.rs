@@ -1,9 +1,8 @@
 use core::fmt;
 
-use crate::{
-    chunk::{blocks::Block, storage::ChunkStorage, Chunk},
-    world::World,
-};
+use chunk::ChunkGenerator;
+
+use crate::{chunk::blocks::Block, world::World};
 
 mod chunk;
 mod wasm;
@@ -18,39 +17,13 @@ impl<D: fmt::Debug> fmt::Debug for DebugInline<D> {
 
 #[no_mangle]
 pub extern "C" fn create_world() -> Box<World> {
-    log!("before");
-    let chunks = [
-        Chunk {
-            x: 0,
-            y: 0,
-            storage: ChunkStorage::Uniform(Block::AIR),
-        },
-        Chunk {
-            x: 0,
-            y: 1,
-            storage: ChunkStorage::Uniform(Block::STONE),
-        },
-        Chunk {
-            x: 1,
-            y: 0,
-            storage: ChunkStorage::Uniform(Block::DIRT),
-        },
-    ];
-
-    let mut world = World::new();
-    for chunk in chunks {
-        world.add_chunk(chunk);
+    let mut world = World::new(0);
+    for i in -6..6 {
+        for j in -2..2 {
+            let c = world.generator.get_chunk((i, j));
+            world.add_chunk(c);
+        }
     }
-
-    for i in 0..8 {
-        world.set_block(i, 0, Block::AIR);
-    }
-    for i in 0..10 {
-        world.set_block(i, 0, Block::STONE);
-    }
-    world.set_block(0, 0, Block::GRASS);
-    world.set_block(20, 20, Block::GRASS);
-    log!("after");
     Box::new(world)
 }
 

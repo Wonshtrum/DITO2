@@ -1,11 +1,9 @@
-use core::{
-    mem::size_of,
-    ops::{Deref, DerefMut},
-};
+use core::mem::MaybeUninit;
 
 use crate::{
-    chunk::storage::{ChunkStorage, Palette},
-    wasm::draw::{draw_quad, Rectangle},
+    chunk::{blocks::Block, storage::ChunkStorage},
+    wasm::draw::{draw_quad, free_mesh, new_mesh, update_mesh, MeshRef, Rectangle, RGBA},
+    TotalSize,
 };
 
 pub mod blocks;
@@ -34,69 +32,95 @@ pub fn get_key(x: isize, y: isize) -> (ChunkKey, usize, usize) {
     )
 }
 
+#[allow(dead_code)]
+struct Vertex {
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+    tex: f32,
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+}
+
 #[derive(Debug)]
 pub struct Chunk {
     pub x: isize,
     pub y: isize,
+    pub mesh: MeshRef,
     pub storage: ChunkStorage,
 }
 
 impl Chunk {
-    pub fn size(&self) -> usize {
-        size_of::<Self>() + self.storage.size()
+    pub fn get_block(&self, x: usize, y: usize) -> Block {
+        self.storage.get_block(x, y)
     }
 
-    pub fn draw(&self) {
+    pub fn set_block(&mut self, x: usize, y: usize, block: Block) {
+        self.mesh.dirty = true;
+        self.storage.set_block(x, y, block)
+    }
+
+    pub fn update_mesh(&mut self) {
+        let mut vertex_buffer: [Vertex; CHUNK_AREA] = unsafe {
+            #[allow(invalid_value)]
+            MaybeUninit::uninit().assume_init()
+        };
+        let mut count = 0;
         let ox = self.x * (CHUNK_SIZE as isize);
         let oy = self.y * (CHUNK_SIZE as isize);
-        match &self.storage {
-            ChunkStorage::Uniform(blocks) => {
-                draw_quad(Rectangle::square(ox, oy, CHUNK_SIZE, blocks.texture()))
+
+        self.storage.for_each(|x, y, block| {
+            if block.id != 0 {
+                vertex_buffer[count] = Vertex {
+                    x: (ox + x as isize) as f32,
+                    y: (oy + y as isize) as f32,
+                    w: 1.,
+                    h: 1.,
+                    tex: block.texture() as f32,
+                    r: 255,
+                    g: 255,
+                    b: 255,
+                    a: 255,
+                };
+                count += 1;
             }
-            ChunkStorage::Palette(blocks) => {
-                let Palette { palette, data, .. } = &**blocks;
-                for y in 0..CHUNK_SIZE {
-                    for x in 0..CHUNK_HALF_SIZE {
-                        let byte = data[y * CHUNK_HALF_SIZE + x];
-                        let block1 = palette[(byte & 0x0F) as usize].0;
-                        let block2 = palette[((byte >> 4) & 0x0F) as usize].0;
-                        let ox = ox + (x * 2) as isize;
-                        draw_quad(Rectangle::square(
-                            ox + 1,
-                            oy + y as isize,
-                            1,
-                            block1.texture(),
-                        ));
-                        draw_quad(Rectangle::square(ox, oy + y as isize, 1, block2.texture()));
-                    }
-                }
-            }
-            ChunkStorage::Grid(blocks) => {
-                for y in 0..CHUNK_SIZE {
-                    for x in 0..CHUNK_SIZE {
-                        let block = blocks[y * CHUNK_SIZE + x];
-                        draw_quad(Rectangle::square(
-                            ox + x as isize,
-                            oy + y as isize,
-                            1,
-                            block.texture(),
-                        ))
-                    }
-                }
-            }
+        });
+        if self.mesh.id == 0 {
+            self.mesh = new_mesh(&vertex_buffer[..count]);
+        } else {
+            update_mesh(&mut self.mesh, &vertex_buffer[..count]);
+        }
+    }
+
+    pub fn debug_draw(&self) {
+        let ox = self.x * (CHUNK_SIZE as isize);
+        let oy = self.y * (CHUNK_SIZE as isize);
+        self.storage.for_each(|x, y, block| {
+            draw_quad(Rectangle::new(
+                ox + x as isize,
+                oy + y as isize,
+                1,
+                1,
+                block.texture(),
+                RGBA::WHITE,
+            ))
+        });
+    }
+}
+
+impl Drop for Chunk {
+    fn drop(&mut self) {
+        if self.mesh.id != 0 {
+            free_mesh(&self.mesh);
         }
     }
 }
 
-impl Deref for Chunk {
-    type Target = ChunkStorage;
-    fn deref(&self) -> &Self::Target {
-        &self.storage
-    }
-}
-
-impl DerefMut for Chunk {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.storage
+impl TotalSize for Chunk {
+    fn dynamic_size(&self) -> usize {
+        self.storage.dynamic_size()
     }
 }

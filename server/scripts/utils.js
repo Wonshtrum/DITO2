@@ -1,7 +1,7 @@
 'use strict';
 
 
-const FLOAT_SIZE = 4;
+//=================================================================================================
 
 Array.build = function (n, lambda) { return Array(n).fill().map((_, i) => lambda(i)); }
 Array.prototype.is_empty = function () { return this.length == 0 }
@@ -27,6 +27,8 @@ Array.prototype.get = function (step) {
     return array.filter((_, i) => i >= a && i < b && (i + a) % c === 0);
 }
 
+//=================================================================================================
+
 const getOrElse = (value, orElse) => value === undefined ? orElse : value;
 const rnd = Math.random;
 const min = Math.min;
@@ -34,6 +36,14 @@ const max = Math.max;
 const abs = Math.abs;
 const floor = Math.floor;
 const sqrt = Math.sqrt;
+
+function time(f, ...args) {
+    let start = Date.now();
+    f(...args);
+    console.log(Date.now() - start);
+}
+
+//=================================================================================================
 
 function generateColor() {
     return HSVtoRGB(rnd(), 1, 1);

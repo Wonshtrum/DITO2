@@ -2,9 +2,19 @@ body {
     margin: 0;
     background: #000000;
 }
+
 h1 {
     color: #FFFFFF;
 }
+
+#canvas-wrapper {
+    margin: 0;
+}
+
+#canvas-infos {
+    position: absolute;
+}
+
 #canvas {
     width: 800px;
     height: 800px;

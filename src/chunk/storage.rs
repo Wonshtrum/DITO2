@@ -2,8 +2,15 @@ use core::{fmt, mem::size_of};
 
 use crate::{
     chunk::{blocks::Block, CHUNK_AREA, CHUNK_HALF_SIZE, CHUNK_SIZE, LOW_NIBBLE, PALETTE_SIZE},
-    DebugInline,
+    DebugInline, TotalSize,
 };
+
+pub struct Palette {
+    /// palette stores up to 16 entries corresponding to the 16 combinations of a nibble.
+    /// u16 stores blocks for chunks of size up to 256.
+    pub palette: [(Block, u16); 16],
+    pub data: [u8; PALETTE_SIZE],
+}
 
 pub enum ChunkStorage {
     Uniform(Block),
@@ -104,7 +111,41 @@ impl ChunkStorage {
         }
     }
 
-    pub fn size(&self) -> usize {
+    pub fn for_each<F: FnMut(usize, usize, Block)>(&self, mut f: F) {
+        match self {
+            Self::Uniform(block) => {
+                for y in 0..CHUNK_SIZE {
+                    for x in 0..CHUNK_SIZE {
+                        f(x, y, *block);
+                    }
+                }
+            }
+            Self::Grid(blocks) => {
+                for y in 0..CHUNK_SIZE {
+                    for x in 0..CHUNK_SIZE {
+                        let block = blocks[y * CHUNK_SIZE + x];
+                        f(x, y, block);
+                    }
+                }
+            }
+            Self::Palette(blocks) => {
+                let Palette { palette, data, .. } = &**blocks;
+                for y in 0..CHUNK_SIZE {
+                    for x in 0..CHUNK_HALF_SIZE {
+                        let byte = data[y * CHUNK_HALF_SIZE + x];
+                        let block1 = palette[((byte >> 4) & 0x0F) as usize].0;
+                        let block2 = palette[(byte & 0x0F) as usize].0;
+                        f(x * 2, y, block1);
+                        f(x * 2 + 1, y, block2);
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl TotalSize for ChunkStorage {
+    fn dynamic_size(&self) -> usize {
         match self {
             Self::Uniform(_) => 0,
             Self::Grid(_) => size_of::<Block>() * CHUNK_AREA,
@@ -121,13 +162,6 @@ impl fmt::Debug for ChunkStorage {
             Self::Palette(palette) => palette.fmt(f),
         }
     }
-}
-
-pub struct Palette {
-    /// palette stores up to 16 entries corresponding to the 16 combinations of a nibble.
-    /// u16 stores blocks for chunks of size up to 256.
-    pub palette: [(Block, u16); 16],
-    pub data: [u8; PALETTE_SIZE],
 }
 
 impl fmt::Debug for Palette {

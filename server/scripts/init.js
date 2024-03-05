@@ -30,13 +30,25 @@ async function init() {
             },
             "draw_quad": (x, y, w, h, tex, r, g, b, a) => {
                 BATCH.draw(x, y, w, h, tex, r / 256, g / 256, b / 256, a / 256);
-            }
+            },
+            "new_mesh": (ptr, len) => {
+                return CHUNKER.new(get_memory(ptr, len));
+            },
+            "update_mesh": (id, ptr, len) => {
+                CHUNKER.update(id, get_memory(ptr, len));
+            },
+            "free_mesh": (id) => {
+                CHUNKER.free(id);
+            },
         }
     });
     DITO2 = dito2.instance.exports;
     DITO2.init_panic_hook();
     WORLD = DITO2.create_world();
     DITO2.debug(WORLD);
+
+    gl.clearColor(0, 0, 0, 0);
+    unbindAllFBO();
     tick();
 }
 
@@ -45,18 +57,24 @@ let y = 0;
 let ticks = 0;
 let SPEED = 2;
 let ZOOM = 8;
+function set_camera(shader) {
+    shader.bind();
+    gl.uniform2f(shader.uniforms.u_screen, RESOLUTION, RESOLUTION);
+    gl.uniform3f(shader.uniforms.u_camera, x, y, ZOOM);
+    gl.uniform1i(shader.uniforms.u_t, ticks);
+}
 
 let BLOCK_ID = 0;
 let BLOCK_FLAGS = 0;
+let acc_time = Array(10);
 function tick() {
-    unbindAllFBO();
-    SHADERS.batch.bind();
-    gl.uniform2f(SHADERS.batch.uniforms.u_screen, RESOLUTION, RESOLUTION);
-    gl.uniform3f(SHADERS.batch.uniforms.u_camera, x, y, ZOOM);
-    gl.uniform1i(SHADERS.batch.uniforms.u_t, ticks);
-    gl.clearColor(1, 1, 1, 1);
+    let start = Date.now();
+
+    set_camera(SHADERS.batch);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    DITO2.draw(WORLD);
+    // DITO2.debug_draw(WORLD);
+    DITO2.update(WORLD);
+    CHUNKER.draw_all();
     BATCH.flush();
     // transferTarget(mainFBO.texture);
 
@@ -79,6 +97,11 @@ function tick() {
         DITO2.set_block(WORLD, block_x, block_y, BLOCK_ID, BLOCK_FLAGS)
     }
 
+    let time = Date.now() - start;
+    acc_time.splice(0, 1);
+    acc_time.push(time);
+    let avg = acc_time.sum() / acc_time.length;
+    CANVAS_INFOS.innerHTML = `${avg.toFixed(1)}`;
     ticks += 1;
     requestAnimationFrame(tick);
 }

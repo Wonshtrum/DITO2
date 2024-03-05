@@ -3,22 +3,21 @@ use crate::{
         blocks::Block, storage::ChunkStorage, Chunk, ChunkGenerator, ChunkKey, CHUNK_AREA,
         CHUNK_SIZE,
     },
-    world::generator::noise::MultiOctaves,
+    wasm::draw::MeshRef,
+    world::generator::noise::{MultiOctaves, Perlin2D, Sampler2D},
 };
-
-use self::noise::{Perlin2D, Sampler2D};
 
 pub mod noise;
 
 pub struct WorldGenerator {
-    seed: usize,
+    _seed: usize,
     sampler: MultiOctaves<Perlin2D>,
 }
 
 impl WorldGenerator {
     pub fn new(seed: usize) -> WorldGenerator {
         Self {
-            seed,
+            _seed: seed,
             sampler: MultiOctaves {
                 noise: Perlin2D::new(seed),
                 base_f: 32.,
@@ -69,6 +68,7 @@ impl ChunkGenerator for WorldGenerator {
         Chunk {
             x: ox,
             y: oy,
+            mesh: MeshRef::new(),
             storage: ChunkStorage::Grid(Box::new(chunk)),
         }
     }

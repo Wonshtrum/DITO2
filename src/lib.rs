@@ -1,4 +1,4 @@
-use core::fmt;
+use core::{fmt, mem::size_of};
 
 use chunk::ChunkGenerator;
 
@@ -7,6 +7,16 @@ use crate::{chunk::blocks::Block, world::World};
 mod chunk;
 mod wasm;
 mod world;
+
+trait TotalSize: Sized {
+    fn static_size() -> usize {
+        size_of::<Self>()
+    }
+    fn dynamic_size(&self) -> usize;
+    fn total_size(&self) -> usize {
+        Self::static_size() + self.dynamic_size()
+    }
+}
 
 struct DebugInline<D: fmt::Debug>(D);
 impl<D: fmt::Debug> fmt::Debug for DebugInline<D> {
@@ -21,7 +31,7 @@ pub extern "C" fn create_world() -> Box<World> {
     for i in -6..6 {
         for j in -2..2 {
             let c = world.generator.get_chunk((i, j));
-            world.add_chunk(c);
+            world.terrain.add_chunk(c);
         }
     }
     Box::new(world)
@@ -33,8 +43,8 @@ pub extern "C" fn set_block(world: &mut World, x: f32, y: f32, id: u8, flags: u8
 }
 
 #[no_mangle]
-pub extern "C" fn draw(world: &mut World) {
-    world.draw();
+pub extern "C" fn debug_draw(world: &World) {
+    world.debug_draw();
 }
 
 #[no_mangle]
@@ -43,9 +53,13 @@ pub extern "C" fn update(world: &mut World) {
 }
 
 #[no_mangle]
-pub extern "C" fn debug(world: &mut World) {
+pub extern "C" fn debug(world: &World) {
     log!("{:^#?}", world.terrain);
-    log!("{}", world.size());
+}
+
+#[no_mangle]
+pub extern "C" fn total_size(world: &World) {
+    log!("{}", world.total_size());
 }
 
 #[no_mangle]

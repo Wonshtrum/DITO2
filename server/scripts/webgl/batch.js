@@ -7,20 +7,21 @@ class Batch {
         this.va = gl.createVertexArray();
         gl.bindVertexArray(this.va);
 
+        //GPU BUFFER
+        this.vb = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+
+        //LAYOUT
+        this.vertexSize = applyLayout(layout.map(n => [n, gl.FLOAT]), 6) / GL_SIZES[gl.FLOAT]
+
         //CPU BUFFER
-        this.vertexSize = layout.sum();
         this.maxQuad = maxQuad;
         this.quadCount = 0;
         this.index = 0;
         this.vertexBuffer = new Float32Array(this.vertexSize * maxQuad);
 
-        //GPU BUFFER
-        this.vb = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+        //COPY CPU BUFFER TO GPU BUFFER
         gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer, gl.DYNAMIC_DRAW);
-
-        //LAYOUT
-        apply_layout(layout, 6);
     }
 
     draw(...floats) {

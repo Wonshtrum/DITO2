@@ -16,6 +16,9 @@ mod sys {
             b: u8,
             a: u8,
         );
+        pub fn new_mesh(ptr: *const u8, len: usize) -> usize;
+        pub fn update_mesh(id: usize, ptr: *const u8, len: usize);
+        pub fn free_mesh(id: usize);
     }
 }
 

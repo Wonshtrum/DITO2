@@ -1,8 +1,7 @@
-use std::ops::{Deref, DerefMut};
-
 use crate::{
     chunk::{blocks::Block, layer::Layer},
     world::generator::WorldGenerator,
+    TotalSize,
 };
 
 pub mod generator;
@@ -24,10 +23,6 @@ impl World {
         }
     }
 
-    pub fn update(&mut self) {
-        for entity in &mut self.entities {}
-    }
-
     pub fn get_block(&mut self, x: isize, y: isize) -> Block {
         self.terrain.get_block(x, y, &self.generator)
     }
@@ -36,20 +31,19 @@ impl World {
         self.terrain.set_block(x, y, block, &self.generator)
     }
 
-    pub fn draw(&self) {
-        self.terrain.draw();
+    pub fn update(&mut self) {
         for entity in &self.entities {}
+        self.terrain.update_meshes();
+    }
+
+    pub fn debug_draw(&self) {
+        for entity in &self.entities {}
+        self.terrain.debug_draw();
     }
 }
 
-impl Deref for World {
-    type Target = Layer;
-    fn deref(&self) -> &Self::Target {
-        &self.terrain
-    }
-}
-impl DerefMut for World {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.terrain
+impl TotalSize for World {
+    fn dynamic_size(&self) -> usize {
+        self.terrain.dynamic_size()
     }
 }

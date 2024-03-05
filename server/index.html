@@ -7,7 +7,10 @@
 
 <body>
     <h1>DITO2</h1>
-    <canvas id="canvas">
+    <div id="canvas-wrapper">
+        <div id="canvas-infos"></div>
+        <canvas id="canvas"></canvas>
+    </div>
 </body>
 
 <!-- UTILS -->
@@ -19,6 +22,7 @@
 <script src="scripts/shaderLib/utils.js"></script>
 <script src="scripts/webgl/webgl.js"></script>
 <script src="scripts/webgl/batch.js"></script>
+<script src="scripts/webgl/mesher.js"></script>
 <!-- WASM -->
 <script src="scripts/init.js"></script>
 <!-- EVENTS -->

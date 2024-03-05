@@ -141,15 +141,31 @@ function unbindAllFBO() {
 
 //=================================================================================================
 
-function apply_layout(layout, divisor = 1) {
-    let vertexSize = layout.sum();
+const GL_SIZES = {};
+GL_SIZES[gl.UNSIGNED_BYTE] = 1;
+GL_SIZES[gl.UNSIGNED_SHORT] = 2;
+GL_SIZES[gl.UNSIGNED_INT] = 4;
+GL_SIZES[gl.BYTE] = 1;
+GL_SIZES[gl.SHORT] = 2;
+GL_SIZES[gl.INT] = 4;
+GL_SIZES[gl.FLOAT] = 4;
+GL_SIZES[gl.DOUBLE] = 8;
+
+function layoutVertexSize(layout) {
+    return layout.map(e => e[0] * GL_SIZES[e[1]]).sum();
+}
+
+function applyLayout(layout, divisor = 1, vertexSize = null) {
+    vertexSize = vertexSize ?? layoutVertexSize(layout);
     let stride = 0;
     for (let i = 0; i < layout.length; i++) {
+        let [c, t, n] = layout[i];
         gl.enableVertexAttribArray(i);
-        gl.vertexAttribPointer(i, layout[i], gl.FLOAT, false, vertexSize * FLOAT_SIZE, stride * FLOAT_SIZE);
+        gl.vertexAttribPointer(i, c, t, n ?? false, vertexSize, stride);
         gl.vertexAttribDivisor(i, divisor);
-        stride += layout[i];
+        stride += c * GL_SIZES[t];
     }
+    return vertexSize;
 }
 
 //=================================================================================================

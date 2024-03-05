@@ -1,7 +1,9 @@
-use core::mem::size_of;
 use std::collections::HashMap;
 
-use crate::chunk::{blocks::Block, get_key, Chunk, ChunkGenerator, ChunkKey};
+use crate::{
+    chunk::{blocks::Block, get_key, Chunk, ChunkGenerator, ChunkKey},
+    TotalSize,
+};
 
 #[derive(Debug)]
 pub struct Layer {
@@ -40,18 +42,26 @@ impl Layer {
             .set_block(x, y, block);
     }
 
-    pub fn size(&self) -> usize {
-        size_of::<Self>()
-            + self
-                .chunks
-                .values()
-                .map(|chunk| chunk.size())
-                .sum::<usize>()
+    pub fn update_meshes(&mut self) {
+        for chunk in self.chunks.values_mut() {
+            if chunk.mesh.dirty {
+                chunk.update_mesh();
+            }
+        }
     }
 
-    pub fn draw(&self) {
+    pub fn debug_draw(&self) {
         for chunk in self.chunks.values() {
-            chunk.draw()
+            chunk.debug_draw()
         }
+    }
+}
+
+impl TotalSize for Layer {
+    fn dynamic_size(&self) -> usize {
+        self.chunks
+            .values()
+            .map(|chunk| chunk.total_size())
+            .sum::<usize>()
     }
 }

@@ -1,4 +1,18 @@
+use core::mem::size_of_val;
+
 use crate::wasm::sys;
+
+#[derive(Debug)]
+pub struct MeshRef {
+    pub id: usize,
+    pub dirty: bool,
+}
+
+impl MeshRef {
+    pub fn new() -> Self {
+        Self { id: 0, dirty: true }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct RGBA {
@@ -8,6 +22,7 @@ pub struct RGBA {
     pub a: u8,
 }
 
+#[allow(dead_code)]
 impl RGBA {
     pub const BLACK: Self = Self::hex(0x000000FF);
     pub const GREY: Self = Self::hex(0xAAAAAAFF);
@@ -53,16 +68,6 @@ impl Rectangle {
             fill,
         }
     }
-    pub fn square(x: isize, y: isize, s: usize, tex: usize) -> Self {
-        Self {
-            x,
-            y,
-            w: s,
-            h: s,
-            tex,
-            fill: RGBA::WHITE,
-        }
-    }
 }
 
 pub fn draw_quad(rect: Rectangle) {
@@ -79,4 +84,26 @@ pub fn draw_quad(rect: Rectangle) {
             rect.fill.a,
         )
     }
+}
+
+pub fn new_mesh<T>(vertex_buffer: &[T]) -> MeshRef {
+    unsafe {
+        let id = sys::new_mesh(vertex_buffer.as_ptr() as _, size_of_val(vertex_buffer));
+        MeshRef { id, dirty: false }
+    }
+}
+
+pub fn update_mesh<T>(mesh: &mut MeshRef, vertex_buffer: &[T]) {
+    mesh.dirty = false;
+    unsafe {
+        sys::update_mesh(
+            mesh.id,
+            vertex_buffer.as_ptr() as _,
+            size_of_val(vertex_buffer),
+        )
+    }
+}
+
+pub fn free_mesh(mesh: &MeshRef) {
+    unsafe { sys::free_mesh(mesh.id) }
 }

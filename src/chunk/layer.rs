@@ -8,12 +8,14 @@ use crate::{
 #[derive(Debug)]
 pub struct Layer {
     pub chunks: HashMap<ChunkKey, Chunk>,
+    pub updated_flag: u8,
 }
 
 impl Layer {
     pub fn new() -> Self {
         Self {
             chunks: HashMap::new(),
+            updated_flag: 0,
         }
     }
 
@@ -36,10 +38,9 @@ impl Layer {
 
     pub fn set_block<G: ChunkGenerator>(&mut self, x: isize, y: isize, block: Block, g: &G) {
         let (key, x, y) = get_key(x, y);
-        self.chunks
-            .entry(key)
-            .or_insert_with(|| g.get_chunk(key))
-            .set_block(x, y, block);
+        let chunk = self.chunks.entry(key).or_insert_with(|| g.get_chunk(key));
+        chunk.set_block(x, y, block);
+        chunk.mesh.dirty = true;
     }
 
     pub fn update_meshes(&mut self) {

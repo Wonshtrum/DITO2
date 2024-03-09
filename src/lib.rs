@@ -1,8 +1,11 @@
 use core::{fmt, mem::size_of};
 
-use chunk::ChunkGenerator;
+use chunk::{ChunkGenerator, CHUNK_SIZE};
 
-use crate::{chunk::blocks::Block, world::World};
+use crate::{
+    chunk::blocks::{Block, BlockType},
+    world::World,
+};
 
 mod chunk;
 mod wasm;
@@ -25,41 +28,60 @@ impl<D: fmt::Debug> fmt::Debug for DebugInline<D> {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn create_world() -> Box<World> {
-    let mut world = World::new(0);
-    for i in -6..6 {
-        for j in -2..2 {
-            let c = world.generator.get_chunk((i, j));
-            world.terrain.add_chunk(c);
+impl World {
+    #[no_mangle]
+    pub extern "C" fn world_new() -> Box<Self> {
+        let mut world = World::new(0);
+        for i in -6..6 {
+            for j in -2..2 {
+                let c = world.generator.get_chunk((i, j));
+                world.terrain.add_chunk(c);
+            }
         }
+        Box::new(world)
     }
-    Box::new(world)
+
+    #[no_mangle]
+    pub extern "C" fn world_set_block(&mut self, x: f32, y: f32, id: BlockType, flags: u8) {
+        self.set_block(
+            x as isize,
+            y as isize,
+            Block {
+                typ: id,
+                flags: flags | self.terrain.updated_flag,
+            },
+        );
+    }
+
+    #[no_mangle]
+    pub extern "C" fn world_update(&mut self) {
+        self.update();
+    }
+
+    #[no_mangle]
+    pub extern "C" fn world_update_meshes(&mut self) {
+        self.update_meshes();
+    }
+
+    #[no_mangle]
+    pub extern "C" fn world_debug_draw(&self) {
+        self.debug_draw();
+    }
+
+    #[no_mangle]
+    pub extern "C" fn world_debug(&self) {
+        log!("{:^#?}", self.terrain);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn world_total_size(&self) -> usize {
+        self.total_size()
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn set_block(world: &mut World, x: f32, y: f32, id: u8, flags: u8) {
-    world.set_block(x as isize, y as isize, Block { id, flags });
-}
-
-#[no_mangle]
-pub extern "C" fn debug_draw(world: &World) {
-    world.debug_draw();
-}
-
-#[no_mangle]
-pub extern "C" fn update(world: &mut World) {
-    world.update();
-}
-
-#[no_mangle]
-pub extern "C" fn debug(world: &World) {
-    log!("{:^#?}", world.terrain);
-}
-
-#[no_mangle]
-pub extern "C" fn total_size(world: &World) {
-    log!("{}", world.total_size());
+pub extern "C" fn chunk_size() -> usize {
+    CHUNK_SIZE
 }
 
 #[no_mangle]

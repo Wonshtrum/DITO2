@@ -1,11 +1,15 @@
 use core::mem::MaybeUninit;
 
 use crate::{
-    chunk::{blocks::Block, storage::ChunkStorage},
+    chunk::{
+        blocks::{Block, BlockType},
+        storage::ChunkStorage,
+    },
     wasm::draw::{draw_quad, free_mesh, new_mesh, update_mesh, MeshRef, Rectangle, RGBA},
     TotalSize,
 };
 
+pub mod automaton;
 pub mod blocks;
 pub mod layer;
 pub mod storage;
@@ -59,7 +63,6 @@ impl Chunk {
     }
 
     pub fn set_block(&mut self, x: usize, y: usize, block: Block) {
-        self.mesh.dirty = true;
         self.storage.set_block(x, y, block)
     }
 
@@ -73,7 +76,7 @@ impl Chunk {
         let oy = self.y * (CHUNK_SIZE as isize);
 
         self.storage.for_each(|x, y, block| {
-            if block.id != 0 {
+            if block.typ != BlockType::Air {
                 vertex_buffer[count] = Vertex {
                     x: (ox + x as isize) as f32,
                     y: (oy + y as isize) as f32,

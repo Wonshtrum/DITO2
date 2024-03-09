@@ -63,7 +63,3 @@ class Mesher {
         }
     }
 };
-
-
-// [(x, y), (w, h), (t), (r, g, b, a)]
-const CHUNKER = new Mesher([[2, gl.FLOAT], [2, gl.FLOAT], [1, gl.FLOAT], [4, gl.UNSIGNED_BYTE, true]], 16 * 16);

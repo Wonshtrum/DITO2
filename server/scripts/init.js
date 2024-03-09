@@ -4,6 +4,8 @@
 let DITO2;
 let WORLD;
 let ATLAS;
+let CHUNK_SIZE;
+let CHUNKER;
 
 // let mainFBO = new FBO(RESOLUTION, RESOLUTION, [AP("main")]);
 
@@ -44,8 +46,11 @@ async function init() {
     });
     DITO2 = dito2.instance.exports;
     DITO2.init_panic_hook();
-    WORLD = DITO2.create_world();
-    DITO2.debug(WORLD);
+    WORLD = DITO2.world_new();
+    DITO2.world_debug(WORLD);
+    CHUNK_SIZE = DITO2.chunk_size();
+    // [(x, y), (w, h), (t), (r, g, b, a)]
+    CHUNKER = new Mesher([[2, gl.FLOAT], [2, gl.FLOAT], [1, gl.FLOAT], [4, gl.UNSIGNED_BYTE, true]], CHUNK_SIZE * CHUNK_SIZE);
 
     gl.clearColor(0, 0, 0, 0);
     unbindAllFBO();
@@ -72,8 +77,9 @@ function tick() {
 
     set_camera(SHADERS.batch);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    // DITO2.debug_draw(WORLD);
-    DITO2.update(WORLD);
+    // DITO2.world_debug_draw(WORLD);
+    DITO2.world_update(WORLD);
+    DITO2.world_update_meshes(WORLD);
     CHUNKER.draw_all();
     BATCH.flush();
     // transferTarget(mainFBO.texture);
@@ -94,7 +100,7 @@ function tick() {
     if (CURSOR.buttons === 1) {
         let block_x = x + (CURSOR.x * 2 - 1) * RESOLUTION / ZOOM;
         let block_y = y - (CURSOR.y * 2 - 1) * RESOLUTION / ZOOM;
-        DITO2.set_block(WORLD, block_x, block_y, BLOCK_ID, BLOCK_FLAGS)
+        DITO2.world_set_block(WORLD, block_x, block_y, BLOCK_ID, BLOCK_FLAGS)
     }
 
     let time = Date.now() - start;

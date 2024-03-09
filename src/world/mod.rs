@@ -33,6 +33,11 @@ impl World {
 
     pub fn update(&mut self) {
         for entity in &self.entities {}
+        self.terrain.update(&self.generator);
+    }
+
+    pub fn update_meshes(&mut self) {
+        for entity in &self.entities {}
         self.terrain.update_meshes();
     }
 
